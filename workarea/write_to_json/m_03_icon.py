@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any
 
 import orjson
-from automate.m_util_functions import functions_path
+from m_01_dump_as_json import resolve_filename_conflict
 from models import Domain, Host, Icon, Url
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm.session import Session
@@ -39,7 +39,6 @@ def write_icons_to_file(session: Session, fetch_limit: int = 100):
                 fd.write('\n')
 
         offset += fetch_limit
-        result = session.execute(query.slice(offset,
-                                             offset + fetch_limit)).all()
+        result = session.execute(query.slice(offset, offset + fetch_limit)).all()
     fd.flush()
     fd.close()

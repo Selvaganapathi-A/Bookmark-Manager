@@ -1,4 +1,4 @@
-import m_01_dump
+import zurvan.workarea.write_to_json.m_01_dump_as_json as m_01_dump_as_json
 import m_02_dump
 import m_03_icon
 from models import Base
