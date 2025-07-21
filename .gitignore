@@ -1,5 +1,6 @@
 *
-
-!*.py
-!\.gitignore
-!pytest.ini
+!*/
+!**/*.py
+!**/*.pyi
+!**/*.sh
+git*
