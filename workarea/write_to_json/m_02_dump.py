@@ -2,10 +2,12 @@ from pathlib import Path
 from typing import Any
 
 import orjson
-from zurvan.workarea.write_to_json.m_01_dump_as_json import resolve_filename_conflict
 from models import Domain, Host, Icon, Url
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm.session import Session
+
+from zurvan.workarea.write_to_json.m_01_dump_as_json import \
+    resolve_filename_conflict
 
 
 def write(data: dict[str, Any], index: int = 1):
@@ -32,29 +34,26 @@ def write_to_file(
         'children': [],
     }
     #
-    query = (
-        select(
-            Url.url,
-            Url.title,
-            Icon.data,
-            Icon.isUri,
-            Host.subDomain,
-            Domain.domainName,
-        )
-        .filter(or_(*(Domain.pk == domain_id for domain_id in domain_ids)))
-        .join(Domain, Url.domain_id == Domain.pk)
-        .join(Host, Url.host_id == Host.pk)
-        .join(Icon, Url.icon_id == Icon.pk)
-        .order_by(
-            Domain.domainName.asc().nulls_last(),
-            Host.subDomain.asc().nulls_last(),
-            Url.url.asc().nulls_last(),
-            Url.title.asc().nulls_last(),
-            Icon.isUri,
-        )
-    )
+    query = (select(
+        Url.url,
+        Url.title,
+        Icon.data,
+        Icon.isUri,
+        Host.subDomain,
+        Domain.domainName,
+    ).filter(or_(*(Domain.pk == domain_id for domain_id in domain_ids))).join(
+        Domain,
+        Url.domain_id == Domain.pk).join(Host, Url.host_id == Host.pk).join(
+            Icon, Url.icon_id == Icon.pk).order_by(
+                Domain.domainName.asc().nulls_last(),
+                Host.subDomain.asc().nulls_last(),
+                Url.url.asc().nulls_last(),
+                Url.title.asc().nulls_last(),
+                Icon.isUri,
+            ))
 
-    result = session.execute(query.slice(offset, stop=offset + fetch_limit)).all()
+    result = session.execute(query.slice(offset,
+                                         stop=offset + fetch_limit)).all()
     while len(result) > 0:
         for url, title, icon, isUri, subdomain, domain in result:
             bookmark = {}
@@ -75,12 +74,14 @@ def write_to_file(
                 write(collection_of_bookmark, file_index)
                 urls_written = 0
                 collection_of_bookmark.clear()
-                collection_of_bookmark['title'] = 'Bookmarks from Python Data Dump'
+                collection_of_bookmark['title'] = (
+                    'Bookmarks from Python Data Dump')
                 collection_of_bookmark['children'] = []
                 file_index += 1
 
         offset += fetch_limit
-        result = session.execute(query.slice(offset, offset + fetch_limit)).all()
+        result = session.execute(query.slice(offset,
+                                             offset + fetch_limit)).all()
 
     if urls_written > 0:
         write(collection_of_bookmark)
@@ -93,31 +94,27 @@ def dump(session: Session, fetch_limit: int = 50):
     offset: int = 0
     urls_written = 0
     #
-    ds = (
-        select(
-            func.count(Url.pk).label('noOfUrls'),
-            Url.domain_id,
-        )
-        .group_by(Url.domain_id)
-        .subquery()
-    )
+    ds = (select(
+        func.count(Url.pk).label('noOfUrls'),
+        Url.domain_id,
+    ).group_by(Url.domain_id).subquery())
     # * bulk domain writes
     offset = 0
     #
-    domain_select_query = (
-        select(ds.c.noOfUrls, ds.c.domain_id)
-        .join(Domain, ds.c.domain_id == Domain.pk)
-        .order_by(ds.c.noOfUrls.desc(), Domain.domainName)
-    )
+    domain_select_query = (select(ds.c.noOfUrls, ds.c.domain_id).join(
+        Domain, ds.c.domain_id == Domain.pk).order_by(ds.c.noOfUrls.desc(),
+                                                      Domain.domainName))
     #
-    result = session.execute(domain_select_query.slice(offset, offset + fetch_limit)).all()
+    result = session.execute(
+        domain_select_query.slice(offset, offset + fetch_limit)).all()
     #
     dom_id: list[int] = []
     dom_urls_count: int = 0
     #
     while len(result) > 0:
         for noOfUrls, domain_id in result:
-            if dom_urls_count + noOfUrls > bookmarks_per_file and len(dom_id) > 0:
+            if (dom_urls_count + noOfUrls > bookmarks_per_file and
+                    len(dom_id) > 0):
                 write_to_file(
                     session,
                     *dom_id,
@@ -130,7 +127,8 @@ def dump(session: Session, fetch_limit: int = 50):
             dom_id.append(domain_id)
             dom_urls_count += noOfUrls
         offset += fetch_limit
-        result = session.execute(domain_select_query.slice(offset, offset + fetch_limit)).all()
+        result = session.execute(
+            domain_select_query.slice(offset, offset + fetch_limit)).all()
 
     if dom_urls_count > 0:
         print(dom_urls_count)

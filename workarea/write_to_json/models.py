@@ -62,11 +62,12 @@ class Host(Base):
                                      deferred=True,
                                      doc='NotRequired')
     #
-    domain_id: Mapped[int] = mapped_column(Integer,
-                                           ForeignKey('Domain.pk',
-                                                      ondelete='CASCADE'),
-                                           nullable=False,
-                                           deferred=True)
+    domain_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey('Domain.pk', ondelete='CASCADE'),
+        nullable=False,
+        deferred=True,
+    )
     domain: Mapped['Domain'] = relationship('Domain', back_populates='hosts')
     #
     urls: Mapped['list[Url]'] = relationship('Url', back_populates='host')
@@ -91,24 +92,26 @@ class Url(Base):
                                      deferred=True,
                                      doc='NotRequired')
     #
-    icon_id: Mapped[Optional[int]] = mapped_column(Integer,
-                                                   ForeignKey(
-                                                       'Icon.pk',
-                                                       ondelete='SET NULL'),
-                                                   nullable=False,
-                                                   deferred=True)
+    icon_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey('Icon.pk', ondelete='SET NULL'),
+        nullable=False,
+        deferred=True,
+    )
     icon: Mapped['Icon'] = relationship('Icon', back_populates='urls')
     #
-    host_id: Mapped[int] = mapped_column(Integer,
-                                         ForeignKey('Host.pk',
-                                                    ondelete='CASCADE'),
-                                         nullable=False,
-                                         deferred=True)
+    host_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey('Host.pk', ondelete='CASCADE'),
+        nullable=False,
+        deferred=True,
+    )
     host: Mapped['Host'] = relationship('Host', back_populates='urls')
     #
-    domain_id: Mapped[int] = mapped_column(Integer,
-                                           ForeignKey('Domain.pk',
-                                                      ondelete='CASCADE'),
-                                           nullable=False,
-                                           deferred=True)
+    domain_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey('Domain.pk', ondelete='CASCADE'),
+        nullable=False,
+        deferred=True,
+    )
     domain: Mapped['Domain'] = relationship('Domain', back_populates='urls')

@@ -39,6 +39,7 @@ def write_icons_to_file(session: Session, fetch_limit: int = 100):
                 fd.write('\n')
 
         offset += fetch_limit
-        result = session.execute(query.slice(offset, offset + fetch_limit)).all()
+        result = session.execute(query.slice(offset,
+                                             offset + fetch_limit)).all()
     fd.flush()
     fd.close()

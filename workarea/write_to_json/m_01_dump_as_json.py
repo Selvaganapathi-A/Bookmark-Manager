@@ -41,7 +41,8 @@ def resolve_filename_conflict(
     # Try file number-based approach first (up to 99)
     if not use_timestamp:
         while True:
-            new_filename = f'{stem} ({file_no:0>2d}){suffix}' if file_no > 0 else f'{stem}{suffix}'
+            new_filename = (f'{stem} ({file_no:0>2d}){suffix}'
+                            if file_no > 0 else f'{stem}{suffix}')
             new_target = parent / new_filename
             if not new_target.exists():
                 return new_target
@@ -67,20 +68,17 @@ def read_urls(
     fetch_limit: int = 50,
 ):
     offset: int = 0
-    query = (
-        select(
-            models.Url.url,
-            models.Url.title,
-            models.Icon.isUri,
-            models.Icon.data,
+    query = (select(
+        models.Url.url,
+        models.Url.title,
+        models.Icon.isUri,
+        models.Icon.data,
+    ).filter(models.Url.host_id == host_id).join(
+        models.Icon, models.Url.icon_id == models.Icon.pk)).order_by(
+            models.Url.url.asc(),
+            models.Url.title.asc(),
+            models.Icon.isUri.desc(),
         )
-        .filter(models.Url.host_id == host_id)
-        .join(models.Icon, models.Url.icon_id == models.Icon.pk)
-    ).order_by(
-        models.Url.url.asc(),
-        models.Url.title.asc(),
-        models.Icon.isUri.desc(),
-    )
     result = session.execute(query.slice(offset, offset + fetch_limit)).all()
     while len(result) > 0:
         for url, title, isUri, icon in result:
@@ -93,7 +91,8 @@ def read_urls(
                 bmk['iconData'] = icon
             urlsList.append(bmk)
         offset += fetch_limit
-        result = session.execute(query.slice(offset, offset + fetch_limit)).all()
+        result = session.execute(query.slice(offset,
+                                             offset + fetch_limit)).all()
 
 
 def read_subdomain(
@@ -104,8 +103,7 @@ def read_subdomain(
 ):
     offset: int = 0
     query = select(models.Host.subDomain, models.Host.pk).filter(
-        or_(*(models.Host.pk == host_id for host_id in host_ids))
-    )
+        or_(*(models.Host.pk == host_id for host_id in host_ids)))
     result = session.execute(query.slice(offset, offset + fetch_limit)).all()
     while len(result) > 0:
         for subdomain, pk in result:
@@ -115,7 +113,8 @@ def read_subdomain(
             read_urls(session, pk, bmk['children'])
             subdomainList.append(bmk)
         offset += fetch_limit
-        result = session.execute(query.slice(offset, offset + fetch_limit)).all()
+        result = session.execute(query.slice(offset,
+                                             offset + fetch_limit)).all()
 
 
 def read_domain(
@@ -132,8 +131,7 @@ def read_domain(
 
     #
     query = select(models.Domain.domainName, models.Domain.pk).filter(
-        or_(*(models.Domain.pk == domain_id for domain_id in domain_ids))
-    )
+        or_(*(models.Domain.pk == domain_id for domain_id in domain_ids)))
 
     result = session.execute(query.slice(offset, offset + fetch_limit)).all()
     while len(result) > 0:
@@ -144,15 +142,14 @@ def read_domain(
             data_to_write.append(bookmark_info)
             read_subdomain(
                 session,
-                *(
-                    session.execute(select(models.Host.pk).filter(models.Host.domain_id == pk))
-                    .scalars()
-                    .all()
-                ),
+                *(session.execute(
+                    select(models.Host.pk).filter(
+                        models.Host.domain_id == pk)).scalars().all()),
                 subdomainList=bookmark_info['children'],
             )
         offset += fetch_limit
-        result = session.execute(query.slice(offset, offset + fetch_limit)).all()
+        result = session.execute(query.slice(offset,
+                                             offset + fetch_limit)).all()
 
     target = Path(__file__).parent / 'JSON' / 'bmk.json'
     target = resolve_filename_conflict(target)
@@ -167,24 +164,20 @@ def dump(session: Session, fetch_limit: int = 50):
     offset: int = 0
     urls_written = 0
     #
-    ds = (
-        select(
-            func.count(models.Url.pk).label('noOfUrls'),
-            models.Url.domain_id,
-        )
-        .group_by(models.Url.domain_id)
-        .subquery()
-    )
+    ds = (select(
+        func.count(models.Url.pk).label('noOfUrls'),
+        models.Url.domain_id,
+    ).group_by(models.Url.domain_id).subquery())
     # * bulk domain writes
     offset = 0
     #
-    domain_select_query = (
-        select(ds.c.noOfUrls, ds.c.domain_id)
-        .join(models.Domain, ds.c.domain_id == models.Domain.pk)
-        .order_by(ds.c.noOfUrls.desc(), models.Domain.domainName)
-    )
+    domain_select_query = (select(ds.c.noOfUrls, ds.c.domain_id).join(
+        models.Domain,
+        ds.c.domain_id == models.Domain.pk).order_by(ds.c.noOfUrls.desc(),
+                                                     models.Domain.domainName))
     #
-    result = session.execute(domain_select_query.slice(offset, offset + fetch_limit)).all()
+    result = session.execute(
+        domain_select_query.slice(offset, offset + fetch_limit)).all()
     #
     dom_id: list[int] = []
     dom_urls_count: int = 0
@@ -199,7 +192,8 @@ def dump(session: Session, fetch_limit: int = 50):
             dom_id.append(domain_id)
             dom_urls_count += noOfUrls
         offset += fetch_limit
-        result = session.execute(domain_select_query.slice(offset, offset + fetch_limit)).all()
+        result = session.execute(
+            domain_select_query.slice(offset, offset + fetch_limit)).all()
 
     if dom_urls_count > 0:
         print(dom_urls_count)

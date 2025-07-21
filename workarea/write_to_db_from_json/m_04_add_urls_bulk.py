@@ -63,16 +63,14 @@ def add(session: Session, cache: int = 1500):
     records_processed: int = 0
     #
     icon_cache: dict[str, int] = m_01_add_icon.build_iconcache(session)
-    domain_cache: dict[str, int] = (m_02_add_domain.build_domaincache(session))
+    domain_cache: dict[str, int] = m_02_add_domain.build_domaincache(session)
     host_cache: dict[str, int] = m_03_add_host.build_hostcache(session)
     url_model_buffer: list[UrlModelDict] = []
     #
     for i, json_data in enumerate(
             parse_JSON.parse_urls_from_json_data(
                 read_data.read_json_file(
-                    read_data.walk(
-                        Path(__file__).parent / "JSON"
-                    ))),
+                    read_data.walk(Path(__file__).parent / 'JSON'))),
             start=1,
     ):
         # * gather necessary data

@@ -10,7 +10,7 @@ def get_column_names(table):
         else:
             set_optional = False
         col_type = col.type.python_type.__name__
-        if (set_optional and col.primary_key) or col.doc == "NotRequired":
+        if (set_optional and col.primary_key) or col.doc == 'NotRequired':
             print(f'\t{col.name}: NotRequired[Optional[{col_type}]]'.expandtabs(
                 4))
         elif set_optional:

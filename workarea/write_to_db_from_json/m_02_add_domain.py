@@ -6,8 +6,12 @@ from sqlalchemy import insert, select
 from sqlalchemy.orm.session import Session
 
 
-def get_or_create_domain(session: Session, /, cache: dict[str, int],
-                         **domain: Unpack[DomainModelDict]):
+def get_or_create_domain(
+    session: Session,
+    /,
+    cache: dict[str, int],
+    **domain: Unpack[DomainModelDict],
+):
     if domain['domainName'] in cache:
         return cache[domain['domainName']]
     else:

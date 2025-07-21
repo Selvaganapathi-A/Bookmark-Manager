@@ -22,7 +22,10 @@ def _deal_ip_hosts(host: str) -> str:
     elif 15 < len(host):
         return host
     else:
-        global IP_ADDRESS_GLOBAL, IP_ADDRESS_INTERNAL, IP_ADDRESS_LOCAL_AREA_NETWORK
+        global \
+            IP_ADDRESS_GLOBAL, \
+            IP_ADDRESS_INTERNAL, \
+            IP_ADDRESS_LOCAL_AREA_NETWORK
         if IP_ADDRESS_LOCAL_AREA_NETWORK.match(host):
             return '$$$ ip-local'
         elif IP_ADDRESS_INTERNAL.match(host):
